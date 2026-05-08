@@ -43,11 +43,12 @@ CREATE TABLE ChefMembership (
     chef_id int NOT NULL,
     plan_id int NOT NULL,
     membership_type VARCHAR(255) NOT NULL,
-    shef_id int NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
-    payment_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    payment_method VARCHAR(255) NOT NULL,
+
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+
     FOREIGN KEY (chef_id) REFERENCES Chef(chef_id)
+    foreign key (plan_id) references MembershipPlan(plan_id)
 );
 
 CREATE TABLE Booking (
@@ -143,9 +144,6 @@ WHERE username = 'chefnelson';
 
 #Delete all data from User and Chef tables
 SET FOREIGN_KEY_CHECKS = 0;
-
-TRUNCATE TABLE ChefAvailability;
-
 SET FOREIGN_KEY_CHECKS = 1;
 
 SELECT * FROM ChefAvailability;
@@ -162,3 +160,10 @@ UNIQUE (
 );
 
 SELECT * FROM Booking;
+
+SELECT * FROM MembershipPlan;
+SELECT * FROM ChefMembership;
+SELECT chef_id, rating
+FROM Chef;
+
+
