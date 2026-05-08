@@ -127,3 +127,38 @@ UPDATE Role SET role_name = 'Admin' WHERE role_id = 1;
 UPDATE Role SET role_name = 'Chef' WHERE role_id = 2;
 UPDATE Role SET role_name = 'User' WHERE role_id = 3;
 SELECT * FROM Role;
+
+SELECT * FROM User;
+
+SELECT * FROM Chef;
+
+SELECT chef_id, bio, specialty
+FROM Chef;
+
+TRUNCATE TABLE User;
+
+INSERT INTO Chef (user_id)
+SELECT user_id FROM User
+WHERE username = 'chefnelson';
+
+#Delete all data from User and Chef tables
+SET FOREIGN_KEY_CHECKS = 0;
+
+TRUNCATE TABLE ChefAvailability;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
+SELECT * FROM ChefAvailability;
+SELECT chef_id, bio, specialty
+FROM Chef;
+
+ALTER TABLE ChefAvailability
+ADD CONSTRAINT unique_chef_schedule
+UNIQUE (
+    chef_id,
+    day_of_week,
+    start_time,
+    end_time
+);
+
+SELECT * FROM Booking;
