@@ -12,5 +12,19 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
 
+  backend:
+    build: ./backend
+    container_name: chefconnection-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ccuser
+      DB_PASSWORD: cc123!
+      DB_NAME: chefconnection_db
+
 volumes:
   mysql_data:

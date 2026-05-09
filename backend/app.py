@@ -1,17 +1,16 @@
-from os import name
-
-from fastapi import FastAPI
+import os
 import mysql.connector
+from fastapi import FastAPI
 
 app = FastAPI()
 
 def get_db_connection():
     return mysql.connector.connect(
-        host="127.0.0.1",
-        port=3307,
-        user="ccuser",
-        password="cc123!",
-        database="chefconnection_db"
+        host=os.getenv("DB_hOST","127.0.0.1"),
+        port=int(os.getenv("DB_PORT","3307")),
+        user=os.getenv("DB_USER", "ccuser"),
+        password=os.getenv("DB_PASSWORD","cc123!"),
+        database=os.getenv("DB_NAME","chefconnection_db")
     )
 
 @app.get("/")
