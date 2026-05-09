@@ -124,14 +124,31 @@ CREATE TABLE Payment (
     FOREIGN KEY (chef_id) REFERENCES Chef(chef_id)
 );
 
+CREATE TABLE ClientPantry (
+    pantry_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    item_name VARCHAR(255) NOT NULL,
+    quantity VARCHAR(100),
+    FOREIGN KEY (user_id) REFERENCES User(user_id)
+);
+
+CREATE TABLE BookingIngredientRequest (
+    request_id INT AUTO_INCREMENT PRIMARY KEY,
+    booking_id INT NOT NULL,
+    ingredient_name VARCHAR(255) NOT NULL,
+    quantity VARCHAR(100),
+    notes TEXT,
+    FOREIGN KEY (booking_id) REFERENCES Booking(booking_id)
+);
+
 UPDATE Role SET role_name = 'Admin' WHERE role_id = 1;
 UPDATE Role SET role_name = 'Chef' WHERE role_id = 2;
 UPDATE Role SET role_name = 'User' WHERE role_id = 3;
 SELECT * FROM Role;
 
-SELECT * FROM User;
+SELECT * FROM ClientPantry;
 
-SELECT * FROM Chef;
+SELECT * FROM BookingIngredientRequest;
 
 SELECT chef_id, bio, specialty
 FROM Chef;
@@ -161,9 +178,10 @@ UNIQUE (
 
 SELECT * FROM Booking;
 
-SELECT * FROM MembershipPlan;
+SELECT * FROM BookingIngredientRequest;
 SELECT * FROM ChefMembership;
 SELECT chef_id, rating
 FROM Chef;
 
 
+SELECT * FROM ChefAvailability WHERE availability_id = 1;

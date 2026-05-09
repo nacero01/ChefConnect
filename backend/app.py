@@ -549,4 +549,185 @@ def search_chefs(
     conn.close()
     return {"chefs": chefs}
 
+@app.post("/users/{user_id}/pantry")
+def add_user_pantry_item(
+    user_id: int,
+    item_name: str,
+    quantity: str = None
+):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    sql = """
+    INSERT INTO ClientPantry 
+    (user_id, item_name, quantity)
+    VALUES (%s, %s, %s)
+    """
+
+    cursor.execute(sql, (user_id, item_name, quantity))
+    conn.commit()
+
+    pantry_id = cursor.lastrowid
+
+    cursor.close()
+    conn.close()
+    return {"message": "Item added to pantry successfully!", "pantry_id": pantry_id}
+
+
+@app.get("/users/{user_id}/pantry")
+def get_user_pantry_items(user_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    SELECT *
+    FROM ClientPantry
+    WHERE user_id = %s
+    """
+
+    cursor.execute(sql, (user_id,))
+    pantry_items = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return {"pantry_items": pantry_items}
+
+@app.post("/bookings/{booking_id}/ingredients")
+def add_booking_ingredient(
+    booking_id: int,
+    ingredient_name: str,
+    quantity: str = None,
+    notes: str = None
+):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    INSERT INTO BookingIngredientRequest 
+    (booking_id, ingredient_name, quantity, notes)
+    VALUES (%s, %s, %s, %s)
+    """
+
+    cursor.execute(sql, (booking_id, ingredient_name, quantity, notes))
+    conn.commit()
+
+    ingredient_id = cursor.lastrowid
+
+    cursor.close()
+    conn.close()
+    return {"message": "Ingredient added to booking successfully!", "ingredient_id": ingredient_id}
+
+@app.get("/bookings/{booking_id}/ingredients")
+def get_booking_ingredients(booking_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    SELECT *
+    FROM BookingIngredientRequest
+    WHERE booking_id = %s
+    """
+
+    cursor.execute(sql, (booking_id,))
+    ingredients = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return {"ingredients": ingredients}
+
+@app.put("/bookings/{booking_id}/cancel")
+def cancel_booking(booking_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    UPDATE Booking 
+    SET status = 'cancelled'
+    WHERE booking_id = %s
+    """
+
+    cursor.execute(sql, (booking_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return {"message": "Booking cancelled successfully!", "booking_id": booking_id}
+
+@app.put("/dishes/{dish_id}")
+def update_chef_dish(
+    dish_id: int,
+    dish_name: str = None,
+    description: str = None,
+    price: float = None
+):
+
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if dish_name is not None:
+        cursor.execute("UPDATE Dish SET dish_name = %s WHERE dish_id = %s", (dish_name, dish_id))
+    if description is not None:
+        cursor.execute("UPDATE Dish SET description = %s WHERE dish_id = %s", (description, dish_id))
+    if price is not None:
+        cursor.execute("UPDATE Dish SET price = %s WHERE dish_id = %s", (price, dish_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return {"message": "Dish updated successfully!"}
+
+@app.delete("/dishes/{dish_id}")
+def delete_chef_dish(dish_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    DELETE FROM Dish
+    WHERE dish_id = %s
+    """
+
+    cursor.execute(sql, (dish_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return {"message": "Dish deleted successfully!"}
+
+@app.put("/availability/{availability_id}")
+def update_chef_availability(
+    availability_id: int,
+    day_of_week: str = None,
+    start_time: str = None,
+    end_time: str = None
+):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    if day_of_week is not None:
+        cursor.execute("UPDATE ChefAvailability SET day_of_week = %s WHERE availability_id = %s", (day_of_week, availability_id))
+    if start_time is not None:
+        cursor.execute("UPDATE ChefAvailability SET start_time = %s WHERE availability_id = %s", (start_time, availability_id))
+    if end_time is not None:
+        cursor.execute("UPDATE ChefAvailability SET end_time = %s WHERE availability_id = %s", (end_time, availability_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return {"message": "Chef availability updated successfully!"}
+
+@app.delete("/availability/{availability_id}")
+def delete_chef_availability(availability_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    DELETE FROM ChefAvailability
+    WHERE availability_id = %s
+    """
+
+    cursor.execute(sql, (availability_id,))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return {"message": "Chef availability deleted successfully!"}
