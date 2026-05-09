@@ -1,15 +1,16 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from schemas.dishes import DishRequest, DishUpdateRequest
 
 router = APIRouter(tags=["Dishes"])
 
 @router.post("/chefs/{chef_id}/dishes")
-def add_chef_dish(
-    chef_id: int,
-    dish_name: str,
-    description: str = None,
-    price: float = None
-):
+def add_chef_dish(chef_id: int, data:DishRequest):
+
+    dish_name = data.dish_name
+    description = data.description
+    price = data.price
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -47,12 +48,12 @@ def get_chef_dishes(chef_id: int):
     return {"dishes": dishes}
 
 @router.put("/dishes/{dish_id}")
-def update_chef_dish(
-    dish_id: int,
-    dish_name: str = None,
-    description: str = None,
-    price: float = None
-):
+def update_chef_dish(dish_id: int, data:DishUpdateRequest):
+
+    dish_name = data.dish_name
+    description = data.description
+    price = data.price
+
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)

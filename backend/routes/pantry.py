@@ -1,14 +1,14 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from schemas.pantry import PantryItemRequest
 
 router = APIRouter(tags=["Pantry"])
 
 @router.post("/users/{user_id}/pantry")
-def add_user_pantry_item(
-    user_id: int,
-    item_name: str,
-    quantity: str = None
-):
+def add_user_pantry_item(user_id: int,data:PantryItemRequest):
+    item_name = data.item_name
+    quantity = data.quantity
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 

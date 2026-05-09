@@ -1,14 +1,15 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from schemas.memberships import MembershipPlanRequest, ChefMembershipRequest
 
 router = APIRouter(tags=["Memberships"])
 
 @router.post("/membership-plans")
-def create_membership_plan(
-    plan_name: str,
-    price: float,
-    duration_months: int
-):
+def create_membership_plan(data:MembershipPlanRequest):
+    plan_name = data.plan_name
+    price = data.price
+    duration_months = data.duration_months
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -28,13 +29,12 @@ def create_membership_plan(
     return {"message": "Membership plan created successfully!", "plan_id": plan_id}
 
 @router.post("/chefs/{chef_id}/membership")
-def add_chef_membership(
-    chef_id: int,
-    plan_id: int,
-    membership_type: str = None,
-    start_date: str = None,
-    end_date: str = None
-):
+def add_chef_membership(chef_id: int, data:ChefMembershipRequest):
+    plan_id = data. plan_id
+    membership_type = data.membership_type
+    start_date = data.start_date
+    end_date = data.end_date
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from schemas.chefs import ChefProfileRequest, AvailabilityRequest
 
 router = APIRouter(tags=["Chefs"])
 
@@ -39,11 +40,11 @@ def get_chef(chef_id: int):
     return {"chef": chef}
 
 @router.put("/chefs/{chef_id}/profile")
-def update_chef_profile(
-    chef_id: int, 
-    bio: str = None, 
-    specialty: str = None
-    ):
+def update_chef_profile(chef_id: int, data:ChefProfileRequest):
+
+    bio = data.bio 
+    specialty = data.specialty
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -68,12 +69,12 @@ def update_chef_profile(
     return {"message": "Chef profile updated successfully!"} 
 
 @router.post("/chefs/{chef_id}/availability")
-def add_chef_availability(
-    chef_id: int,
-    day_of_week: str,
-    start_time: str,
-    end_time: str
-):
+def add_chef_availability(chef_id: int, data:AvailabilityRequest):
+
+    day_of_week = data.day_of_week
+    start_time = data.start_time
+    end_time = data.end_time
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 

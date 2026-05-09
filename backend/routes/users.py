@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from schemas.users import RegisterRequest, LoginRequest
 
 router = APIRouter(tags=["Users"])
 
@@ -36,12 +37,16 @@ def get_user(user_id: int):
     return {"user": user}
 
 @router.post("/register")
-def register_user(username: str, email: str, password_hash: str, role: str):
+def register_user(data: RegisterRequest):
+
+    username = data.username
+    email = data.email
+    password_hash = data.password
+    role = data.role
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Determine role_id based on role name
     if role.lower().strip() == "chef":
         role_id = 2
     else:
@@ -71,7 +76,10 @@ def register_user(username: str, email: str, password_hash: str, role: str):
     return {"message": "User registered successfully!", "user_id": user_id, "role_id": role_id}
 
 @router.post("/login")
-def login(username: str, password: str):
+def login(data:LoginRequest):
+
+    username = data.username
+    password = data.password
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)

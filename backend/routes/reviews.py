@@ -1,15 +1,18 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from schemas.reviews import ReviewRequest
 
 router = APIRouter(tags=["Reviews"])
 
 @router.post("/reviews")
-def create_review(
-    chef_id: int,
-    user_id: int,
-    rating: int,
-    comment: str = None
-):
+def create_review(data:ReviewRequest):
+
+    chef_id = data.chef_id
+    user_id = data.user_id
+    rating = data.rating
+    comment = data.comment
+
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from database import get_db_connection
+from schemas.bookings import BookingRequest, BookingStatusRequest, BookingIngredientRequest
 
 router = APIRouter(tags=["Bookings"])
 
@@ -14,13 +15,13 @@ def get_bookings():
     return {"bookings": bookings}
 
 @router.post("/bookings")
-def create_booking(
-    chef_id: int,
-    user_id: int,
-    booking_date: str,
-    booking_time: str,
-    customer_requests: str = None
-):
+def create_booking(data:BookingRequest):
+    chef_id = data.chef_id
+    user_id = data.user_id
+    booking_date = data.booking_date
+    booking_time = data.booking_time
+    customer_requests = data.customer_requests
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -87,7 +88,10 @@ def create_booking(
     return {"message": "Booking created successfully!", "booking_id": booking_id, "status": "pending"}
 
 @router.put("/bookings/{booking_id}/status")
-def update_booking_status(booking_id: int, status: str):
+def update_booking_status(booking_id: int, data:BookingStatusRequest):
+
+    status = data.status
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -162,12 +166,12 @@ def cancel_booking(booking_id: int):
 
 
 @router.post("/bookings/{booking_id}/ingredients")
-def add_booking_ingredient(
-    booking_id: int,
-    ingredient_name: str,
-    quantity: str = None,
-    notes: str = None
-):
+def add_booking_ingredient(booking_id: int, data:BookingIngredientRequest):
+
+    ingredient_name = data.ingredient_name
+    quantity = data.quantity
+    notes = data.notes
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
