@@ -61,9 +61,9 @@ def get_chef(chef_id: int):
         u.email,
         c.bio,
         c.specialty,
-        c .rating,
+        c.rating,
         CASE
-            WHEN ChefMembership.end_date >= CURDATE() THEN 1
+            WHEN cm.end_date >= CURDATE() THEN 1
             ELSE 0
         END AS has_membership
 
@@ -157,43 +157,6 @@ def login(username: str, password: str):
     else:
         return {"message": "Login successful!", "user": user}
 
-
-@app.get("/chefs")
-def get_chefs():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    chef_sql = """
-    SELECT
-        Chef.chef_id,
-        User.username,
-        Chef.bio,
-        Chef.specialty,
-        Chef.rating,
-        CASE
-            WHEN ChefMembership.end_date >= CURDATE() THEN 1
-            ELSE 0
-        END AS has_membership,
-
-        (
-            Chef.rating +
-            CASE
-                WHEN ChefMembership.end_date >= CURDATE() THEN 0.5
-                ELSE 0
-            END
-        ) AS ranking_score
-
-    FROM Chef
-    JOIN User ON Chef.user_id = User.user_id
-    LEFT JOIN ChefMembership ON Chef.chef_id = ChefMembership.chef_id
-
-    ORDER BY ranking_score DESC;
-    """
-    cursor.execute(chef_sql)
-    chefs = cursor.fetchall()
-    cursor.close()
-    conn.close()
-    return {"chefs": chefs}
-
 @app.put("/chefs/{chef_id}/profile")
 def update_chef_profile(
     chef_id: int, 
@@ -209,6 +172,12 @@ def update_chef_profile(
         specialty = %s 
     WHERE chef_id = %s
     """
+
+    if bio is not None:
+        cursor.execute("UPDATE Chef SET bio = %s WHERE chef_id = %s", (bio, chef_id))
+
+    if specialty is not None:
+        cursor.execute("UPDATE Chef SET specialty = %s WHERE chef_id = %s", (specialty, chef_id))
 
     cursor.execute(sql, (bio, specialty, chef_id))
     conn.commit()
@@ -273,7 +242,7 @@ def create_booking(
     WHERE chef_id = %s 
     AND booking_date = %s 
     AND booking_time = %s
-    AND status IN ('pending', 'confirmed')
+    AND status IN ('pending', 'accepted')
     """
     cursor.execute(check_sql, (chef_id, booking_date, booking_time))
     existing = cursor.fetchone()
@@ -518,18 +487,18 @@ def get_chef_dishes(chef_id: int):
 def create_membership_plan(
     plan_name: str,
     price: float,
-    benefits: str = None
+    duration_months: int
 ):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     sql = """
     INSERT INTO MembershipPlan 
-    (plan_name, price, benefits)
+    (plan_name, price, duration_months)
     VALUES (%s, %s, %s)
     """
 
-    cursor.execute(sql, (plan_name, price, benefits))
+    cursor.execute(sql, (plan_name, price, duration_months))
     conn.commit()
 
     plan_id = cursor.lastrowid
@@ -542,7 +511,7 @@ def create_membership_plan(
 def add_chef_membership(
     chef_id: int,
     plan_id: int,
-    memmbership_type: str = None,
+    membership_type: str = None,
     start_date: str = None,
     end_date: str = None
 ):
@@ -807,7 +776,7 @@ def add_favorite_chef(user_id: int, chef_id: int):
     cursor = conn.cursor(dictionary=True)
 
     sql = """
-    INSERT INTO UserFavoriteChef (user_id, chef_id)
+    INSERT INTO FavoriteChef (user_id, chef_id)
     VALUES (%s, %s)
     """
 
@@ -825,7 +794,7 @@ def add_favorite_chef(user_id: int, chef_id: int):
     conn.close()
     return {"message": "Chef added to favorites successfully!"}
 
-app.get("/users/{user_id}/favorites")
+@app.get("/users/{user_id}/favorites")
 def get_favorite_chefs(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -865,3 +834,33 @@ def remove_favorite_chef(user_id: int, chef_id: int):
     cursor.close()
     conn.close()
     return {"message": "Chef removed from favorites successfully!"}
+
+@app.get("/chefs/{chef_id}/booking-requests")
+def get_chef_booking_requests(chef_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    bookingReq_sql = """
+    SELECT
+        b.booking_id,
+        b.booking_date,
+        b.booking_time,
+        b.status,
+        b.customer_requests,
+        u.user_id AS client_id,
+        u.username AS client_username,
+        u.email AS client_email
+    FROM Booking b
+    JOIN User u ON b.user_id = u.user_id
+    WHERE b.chef_id = %s
+    AND b.status = 'pending'
+    ORDER BY b.booking_date, b.booking_time
+    """
+
+    cursor.execute(bookingReq_sql, (chef_id,))
+    requests = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return {"booking_requests": requests}
