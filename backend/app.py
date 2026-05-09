@@ -28,16 +28,62 @@ def get_roles():
     conn.close()
     return {"roles": roles}
 
-@app.get("/users")
-def get_users():
+@app.get("/users/{user_id}")
+def get_user(user_id: int):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM User")
-    users = cursor.fetchall()
+    user_sql ="""
+    SELECT
+        u.user_id,
+        u.username, 
+        u.email, 
+        r.role_name
+    FROM User u
+    JOIN Role r ON u.role_id = r.role_id
+    WHERE u.user_id = %s
+    """
+    cursor.execute(user_sql, (user_id,))
+    user = cursor.fetchone()
     cursor.close()
     conn.close()
-    return {"users": users}
+    if not user:
+        return {"message": "User not found"}
+    return {"user": user}
 
+@app.get("/chefs/{chef_id}")
+def get_chef(chef_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    chef_sql = """
+    SELECT
+        c.chef_id,
+        u.username,
+        u.email,
+        c.bio,
+        c.specialty,
+        c .rating,
+        CASE
+            WHEN ChefMembership.end_date >= CURDATE() THEN 1
+            ELSE 0
+        END AS has_membership
+
+        m.plan_name,
+        cm.membership_type,
+        cm.start_date,
+        cm.end_date
+    FROM Chef c
+    JOIN User u ON c.user_id = u.user_id
+    LEFT JOIN ChefMembership cm ON c.chef_id = cm.chef_id
+    LEFT JOIN MembershipPlan m ON cm.plan_id = m.plan_id
+    WHERE c.chef_id = %s
+    """
+    cursor.execute(chef_sql, (chef_id,))
+    chef = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if not chef:
+        return {"message": "Chef not found"}
+    return {"chef": chef}
 
 @app.get("/bookings")
 def get_bookings():
@@ -104,7 +150,7 @@ def login(username: str, password: str):
     user = cursor.fetchone()
 
     cursor.close()
-    conn.close()
+    conn.close() 
 
     if not user:
         return {"message": "Invalid username or password"}
@@ -238,6 +284,29 @@ def create_booking(
 
         return {"message": "This time slot is already booked."}
     
+    availability_sql = """
+    SELECT *
+    FROM ChefAvailability
+    WHERE chef_id = %s
+    AND day_of_week = DAYNAME(%s)
+    AND %s BETWEEN start_time AND end_time
+    """
+
+    cursor.execute(
+        availability_sql,
+        (chef_id, booking_date, booking_time)
+    )
+
+    availability = cursor.fetchone()
+
+    if not availability:
+        cursor.close()
+        conn.close()
+
+        return {
+            "error": "Chef is not available at this time"
+        }
+        
     booking_sql = """
     INSERT INTO Booking 
     (
@@ -731,3 +800,68 @@ def delete_chef_availability(availability_id: int):
     cursor.close()
     conn.close()
     return {"message": "Chef availability deleted successfully!"}
+
+@app.post("/users/{user_id}/favorites/{chef_id}")
+def add_favorite_chef(user_id: int, chef_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    INSERT INTO UserFavoriteChef (user_id, chef_id)
+    VALUES (%s, %s)
+    """
+
+    try:
+        cursor.execute(sql, (user_id, chef_id))
+        conn.commit()
+    except mysql.connector.IntegrityError:
+        cursor.close()
+        conn.close()
+        return {"message": "This chef is already in your favorites."}
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return {"message": "Chef added to favorites successfully!"}
+
+app.get("/users/{user_id}/favorites")
+def get_favorite_chefs(user_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    SELECT 
+        c.chef_id,
+        u.username,
+        c.specialty,
+        c.rating
+    FROM UserFavoriteChef f
+    JOIN Chef c ON f.chef_id = c.chef_id
+    JOIN User u ON c.user_id = u.user_id
+    WHERE f.user_id = %s
+    """
+
+    cursor.execute(sql, (user_id,))
+    favorite_chefs = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return {"favorite_chefs": favorite_chefs}
+
+@app.delete("/users/{user_id}/favorites/{chef_id}")
+def remove_favorite_chef(user_id: int, chef_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql = """
+    DELETE FROM FavoriteChef
+    WHERE user_id = %s AND chef_id = %s
+    """
+
+    cursor.execute(sql, (user_id, chef_id))
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+    return {"message": "Chef removed from favorites successfully!"}
