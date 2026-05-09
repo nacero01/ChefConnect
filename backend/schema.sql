@@ -185,9 +185,6 @@ CREATE TABLE FavoriteChef (
 
 
 TRUNCATE TABLE User;
-
-
-
 #Delete all data from User and Chef tables
 SET FOREIGN_KEY_CHECKS = 0;
 SET FOREIGN_KEY_CHECKS = 1;
