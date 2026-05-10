@@ -183,8 +183,14 @@ CREATE TABLE FavoriteChef (
     UNIQUE(user_id, chef_id)
 );
 
+INSERT INTO Role (role_name) VALUES ('admin'),()'chef'),
+('user');
 
-TRUNCATE TABLE User;
+SELECT * FROM Role;
+
+TRUNCATE TABLE Role;
 #Delete all data from User and Chef tables
 SET FOREIGN_KEY_CHECKS = 0;
 SET FOREIGN_KEY_CHECKS = 1;
+
+docker exec -it chefconnection-mysql mysql -u ccuser -p

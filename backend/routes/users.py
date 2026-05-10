@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from database import get_db_connection
 from schemas.users import RegisterRequest, LoginRequest
+from utils import success_response, error_response
 
 router = APIRouter(tags=["Users"])
 
@@ -12,7 +13,7 @@ def get_roles():
     roles = cursor.fetchall()
     cursor.close()
     conn.close()
-    return {"roles": roles}
+    return success_response("Roles retrieved successfully",roles)
 
 @router.get("/users/{user_id}")
 def get_user(user_id: int):
@@ -33,8 +34,8 @@ def get_user(user_id: int):
     cursor.close()
     conn.close()
     if not user:
-        return {"message": "User not found"}
-    return {"user": user}
+        return error_response("User not found")
+    return success_response("User retrieved successfully",user)
 
 @router.post("/register")
 def register_user(data: RegisterRequest):
@@ -73,7 +74,7 @@ def register_user(data: RegisterRequest):
 
     cursor.close()
     conn.close()
-    return {"message": "User registered successfully!", "user_id": user_id, "role_id": role_id}
+    return success_response("User registered successfully!", user_id, role_id)
 
 @router.post("/login")
 def login(data:LoginRequest):
@@ -100,7 +101,7 @@ def login(data:LoginRequest):
     conn.close() 
 
     if not user:
-        return {"message": "Invalid username or password"}
+        return error_response("Invalid username or password")
     else:
-        return {"message": "Login successful!", "user": user}
+        return success_response("Login successful!", user)
 

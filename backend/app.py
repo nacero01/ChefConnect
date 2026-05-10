@@ -8,8 +8,20 @@ from routes.pantry import router as pantry_router
 from routes.favorites import router as favorites_router
 from routes.memberships import router as memberships_router
 from routes.availability import router as availability_router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(users_router)
 app.include_router(chefs_router)
